@@ -29,13 +29,38 @@ enum PushcutImage {
     ImageData(String), // base64 encoded image
 }
 
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+#[allow(dead_code)]
+enum PushcutActionType {
+    Shortcut(String), // name of shortcut to run
+    Homekit(String),  // name of homekit scene to execute
+    Url(String),      // URL that this action should open
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "UPPERCASE")]
+#[allow(dead_code)]
+enum PushcutHttpMethod {
+    Get,
+    Post,
+    Put,
+}
+
+#[skip_serializing_none]
+#[derive(Debug, Serialize)]
+struct PushcutHttpHeader {
+    key: String,
+    value: String,
+}
+
 #[skip_serializing_none]
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 struct PushcutUrlBackgroundOptions {
-    http_method: Option<String>,
+    http_method: Option<PushcutHttpMethod>,
     http_content_type: Option<String>,
-    http_header: Option<Vec<HashMap<String, String>>>,
+    http_header: Option<Vec<PushcutHttpHeader>>,
 }
 
 #[skip_serializing_none]
@@ -45,12 +70,11 @@ struct PushcutAction {
     name: Option<String>,            // Name of the action
     input: Option<String>,           // Input value, passed to action
     keep_notification: Option<bool>, // true will not dismiss notification after action
-    shortcut: Option<String>,        // name of shortcut to run
-    homekit: Option<String>,         // name of homekit scene to execute
     run_on_server: Option<bool>,     // true will run shortcut/homekit action on automation server
     online: Option<String>, // name of online automation to execute ("Integration: Trigger")
-    url: Option<String>,    // URL that this action should open
     url_background_options: Option<PushcutUrlBackgroundOptions>, // configuration for background web request
+    #[serde(flatten)]
+    action: PushcutActionType,
 }
 
 #[skip_serializing_none]
@@ -85,26 +109,24 @@ async fn send_notification(name: &str, api_key: &str) -> Result<(), Box<dyn std:
 
     let body = PushcutRequest {
         id: Some(String::from("Test")),
-        text: Some(String::from("Nachricht")),
-        title: Some(String::from("Dieser Titel")),
+        text: None,
+        title: None,
         default_action: None,
         actions: Some(vec![PushcutAction {
             name: Some(String::from("Test Action")),
             input: None,
             keep_notification: Some(true),
-            shortcut: None,
-            homekit: None,
             run_on_server: None,
             online: None,
-            url: Some(String::from("https://google.de")),
             url_background_options: Some(PushcutUrlBackgroundOptions {
-                http_method: Some(String::from("GET")),
-                http_content_type: Some(String::from("application/json")),
+                http_method: None,
+                http_content_type: None,
                 http_header: None,
             }),
+            action: PushcutActionType::Url(String::from("https://google.de")),
         }]),
         sound: Some(Sound::Custom(String::from("test"))),
-        image: Some(PushcutImage::Image(String::from("https://heise.cloudimg.io/v7/_www-heise-de_/imgs/18/3/7/0/2/8/8/2/shutterstock_376943356-9a1dc8b9e51de9a0.jpeg?force_format=avif%2Cwebp%2Cjpeg&org_if_sml=1&q=50&width=516"))),
+        image: None,
         input: None,
         devices: None,
         is_time_sensitive: None,
