@@ -38,6 +38,12 @@ enum PushcutActionType {
     Url(String),      // URL that this action should open
 }
 
+impl Default for PushcutActionType {
+    fn default() -> Self {
+        PushcutActionType::Url("https://pushcut.io".to_string())
+    }
+}
+
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "UPPERCASE")]
 #[allow(dead_code)]
@@ -45,6 +51,12 @@ enum PushcutHttpMethod {
     Get,
     Post,
     Put,
+}
+
+impl Default for PushcutHttpMethod {
+    fn default() -> Self {
+        PushcutHttpMethod::Get
+    }
 }
 
 #[skip_serializing_none]
@@ -55,16 +67,16 @@ struct PushcutHttpHeader {
 }
 
 #[skip_serializing_none]
-#[derive(Debug, Serialize)]
+#[derive(Debug, Default, Serialize)]
 #[serde(rename_all = "camelCase")]
 struct PushcutUrlBackgroundOptions {
-    http_method: Option<PushcutHttpMethod>,
+    http_method: PushcutHttpMethod,
     http_content_type: Option<String>,
     http_header: Option<Vec<PushcutHttpHeader>>,
 }
 
 #[skip_serializing_none]
-#[derive(Debug, Serialize)]
+#[derive(Debug, Default, Serialize)]
 #[serde(rename_all = "camelCase")]
 struct PushcutAction {
     name: Option<String>,            // Name of the action
@@ -78,7 +90,7 @@ struct PushcutAction {
 }
 
 #[skip_serializing_none]
-#[derive(Debug, Serialize)]
+#[derive(Debug, Default, Serialize)]
 #[serde(rename_all = "camelCase")]
 struct PushcutRequest {
     id: Option<String>,
@@ -109,30 +121,15 @@ async fn send_notification(name: &str, api_key: &str) -> Result<(), Box<dyn std:
 
     let body = PushcutRequest {
         id: Some(String::from("Test")),
-        text: None,
-        title: None,
-        default_action: None,
         actions: Some(vec![PushcutAction {
             name: Some(String::from("Test Action")),
-            input: None,
             keep_notification: Some(true),
-            run_on_server: None,
-            online: None,
-            url_background_options: Some(PushcutUrlBackgroundOptions {
-                http_method: None,
-                http_content_type: None,
-                http_header: None,
-            }),
+            url_background_options: Some(PushcutUrlBackgroundOptions::default()),
             action: PushcutActionType::Url(String::from("https://google.de")),
+            ..Default::default()
         }]),
         sound: Some(Sound::Custom(String::from("test"))),
-        image: None,
-        input: None,
-        devices: None,
-        is_time_sensitive: None,
-        thread_id: None,
-        delay: None,
-        schedule_timestamp: None,
+        ..Default::default()
     };
 
     let js = serde_json::to_string_pretty(&body).unwrap();
